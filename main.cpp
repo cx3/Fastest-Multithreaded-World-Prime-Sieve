@@ -1,7 +1,8 @@
 //======================================================
 // MMsieve - prime generator boolean
 
-// Copyright [2017] [mgr inz. Marek Matusiak]
+// Copyright [2022] [mgr inz. Marek Matusiak]
+/* Copyright [2022] Aleksander Starostka
 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -403,7 +404,7 @@ int main(int argc, char *argv[]) {
     s[2] = s[3] = s[5] = true; // predefined primes and remember we had set uint e=2, p=2, n=10000 or more
     
                                                                    /*
-          _ _     _    _           _     _                          
+     _ _     _    _           _     _                          
   __| (_)_ _(_)__| |___   ___| |_  (_)_ __  _ __  ___ _ _ __ _ 
  / _` | \ V / / _` / -_) / -_)  _| | | '  \| '_ \/ -_) '_/ _` |
  \__,_|_|\_/|_\__,_\___| \___|\__| |_|_|_|_| .__/\___|_| \__,_|
