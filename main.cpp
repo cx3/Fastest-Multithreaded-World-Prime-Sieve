@@ -73,14 +73,14 @@ bool one_of(string s, vector<string> il) {
 }
 
 
-void askForSieveLimit(string s, uint *n, uint default=25) {
+void askForSieveLimit(string s, uint *n, uint default_=25) {
     /**
      * Depending whether passed string s is empty, it asks user to write a number that is limit of sieve
      * @param s when not empty function tries to convert it to uint. In case of exception it converts it
      * to default value
      * @param *n is a pointer to variable responsible for limit of MMSieve
      */
-    (*n) = default;
+    (*n) = default_;
     uint val = 0;
     string sval = "";
     
@@ -91,11 +91,11 @@ void askForSieveLimit(string s, uint *n, uint default=25) {
     
     try{ 
         val = stoul(sval, nullptr, 0);
-        if (val < default || val > 2000000000u) {
-            val = default;
+        if (val < default_ || val > 2000000000u) {
+            val = default_;
         }
     } catch (invalid_argument& ia) {
-        val = default;
+        val = default_;
     }
     (*n) = val;
 }
