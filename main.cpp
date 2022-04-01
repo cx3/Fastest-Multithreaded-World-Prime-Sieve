@@ -1,7 +1,8 @@
 //======================================================
 // MMsieve - prime generator boolean
 
-// Copyright [2017] [mgr inz. Marek Matusiak]
+// Copyright [2022] [mgr inz. Marek Matusiak]
+/* Copyright [2022] Aleksander Starostka */
 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
