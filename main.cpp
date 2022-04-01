@@ -93,7 +93,7 @@ void askForSieveLimit(string s, uint *n, uint default_=25) {
     
     try{ 
         val = stoul(s, nullptr, 0);
-        if (val < default_ || val > 2000000000u) {
+        if (val < default_ || val > 8000000000u) {
             val = default_;
         }
     } catch (invalid_argument& ia) {
@@ -303,7 +303,7 @@ void toFile(bool s[], uint len, string name="primes.txt") {
 int main(int argc, char *argv[]) {
     
     bool use_threads = false;
-    uint e=2, p=2, n=10000, active_threads=1, cpu_cores=thread::hardware_concurrency();
+    uint e=2, p=2, n=1000000000, active_threads=1, cpu_cores=thread::hardware_concurrency();
     string fileName = "primes.txt";
     bool save_to_file = true;
     
@@ -322,7 +322,13 @@ int main(int argc, char *argv[]) {
             [](unsigned char c){ return tolower(c); }
         );
         args.push_back(arg);
-        //cout << "LASTARG: " << args[args.size()-1] << "\n";
+    }
+    
+    if (argc == 2 && one_of(args[0], {"h", "-h", "--h", "help", "-help", "--help"})) {
+        cout << "Usage example: mmsieve n=[number] threads=[number] file=[someFileName.txt|no|0]\n\n"
+             << " * n - sieve limit, to this number sieve finds primes\n"
+             << " * threads or shorter t, number of threads to be used\n"
+             << " * file or shorter f, a filename of result file. passing f=no will not save result to file\n\n";
     }
     
     // all arguments split by = 
@@ -338,7 +344,6 @@ int main(int argc, char *argv[]) {
             }
             paramValue = s.substr(start, end);
             userParams[paramName] = paramValue;
-            //cout << "KV  " << paramName << " " << paramValue << "\n";
         }
     }
     
@@ -359,7 +364,6 @@ int main(int argc, char *argv[]) {
             askForFileName(value, &save_to_file, &fileName);
             userKeys.push_back("filename");
         }
-        //cout << "cmdline: " << key << "->" << value << "\n";
     }
     
     /* check what settings were not set yet and launch Gandalf wizard in the case of emergency */
@@ -404,6 +408,7 @@ int main(int argc, char *argv[]) {
     cout << "STAGE 2/3\n";
     
     generator(p, e, n, s); // This generator iteration is the longest. Gamma Goblins works for acceleration
+    // i.e. split it to threads
     
     cout << "STAGE 3/3\n";
     
@@ -452,7 +457,7 @@ int main(int argc, char *argv[]) {
         
         /*
          * Threading in C++17 allows for creating  custom classes with  overloaded operator() returning void
-         * 
+         * @author #cx3#
          */
         class ThreadedTask {
             vector<int> *primes_vec;
@@ -515,10 +520,10 @@ int main(int argc, char *argv[]) {
         }
         
         while (1) { // here we can wait till all threads finish their cleaning jobs
-            cout << "at=" << active_threads << "\t";
+            //cout << "at=" << active_threads << "\t";
             //cout << "\twaiting....\n";
             //sleep_until(system_clock::now() + seconds(0.25));
-            sleep_until(system_clock::now() + 0.1s);
+            sleep_until(system_clock::now() + 0.01s);
             if (active_threads == 0) {
                 break;
             }
@@ -526,6 +531,14 @@ int main(int argc, char *argv[]) {
     } 
     
     cout << "Action time " << (float)(clock() - start)/1000 << " ms";
+    
+    uint found = 0;
+    for (uint i=0;  i<n;  ++i) {
+        if (s[i]) {
+            found++;
+        }
+    }
+    cout << "\nFound primes: " << found << "\n";
     
     if (save_to_file) {
         toFile(s, n, fileName);
