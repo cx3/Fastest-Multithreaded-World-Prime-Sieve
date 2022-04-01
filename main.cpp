@@ -1,7 +1,7 @@
 //======================================================
 // MMsieve - prime generator boolean
-// Copyright [2022] [mgr inz. Marek Matusiak]
-/* Copyright <2022> Aleksander Starostka */
+
+// Copyright [2017] [mgr inz. Marek Matusiak]
 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
 //======================================================
 
 
+#include <map>
 #include <ctime>
 #include <cmath>
 #include <vector>
@@ -58,13 +59,13 @@ bool one_of(string s, initializer_list<string> il) {
 }
 
 
-bool one_of(string s, vector<string> il) {
+bool one_of(string s, vector<string> vec) {
     /**
      * Tells if value s exists in vector<string> passed in vector<string>
      * @param s: tested value
-     * @param il: vector<string> object
+     * @param vec: vector<string> object
      */
-    for (auto v: il) {
+    for (auto v: vec) {
         if (s == v) {
             return true;
         }
@@ -90,50 +91,16 @@ void askForSieveLimit(string s, uint *n, uint default_=25) {
     }
     
     try{ 
-        val = stoul(sval, nullptr, 0);
+        val = stoul(s, nullptr, 0);
         if (val < default_ || val > 2000000000u) {
             val = default_;
         }
     } catch (invalid_argument& ia) {
+        cout << "catched exception askForSieveLimit\n";
         val = default_;
     }
     (*n) = val;
 }
-
-
-/*void askForThreads(string s, bool *use_threads, uint *active_threads, uint *cpu_cores) {
-    if (s != "") {
-        if (one_of(s, {"n", "no", "false"})) {
-            (*use_threads) = false;
-        } else {
-            if (one_of(s, {"y", "yes", "true"})) {
-                (*use_threads) = true;
-                (*active_threads) = (*cpu_cores);
-            }
-        }
-    } else {
-        cout << "Use threads? [y]es/[other] for no. Choice: ";
-        string choice;
-        cin >> choice;
-        if (choice == "y") {
-            (*use_threads) = true;
-            stringstream ss;
-            ss << (*cpu_cores);
-            cout << "How much threads to use? Value must be in range <" << 0 << ";" << ss.str() << ">  Choice: ";
-            uint userThreads = (*cpu_cores);
-            try{
-                cin >> userThreads;
-                if (userThreads >=0 && userThreads < (*cpu_cores)) {
-                    (*active_threads) = userThreads;
-                } else {
-                    (*active_threads) = (*cpu_cores);
-                }
-            } catch(invalid_argument& ia) {
-                (*active_threads) = (*cpu_cores);
-            }
-        }
-    }
-}*/
 
 
 void askForThreadsCount(string s, bool *use_threads, uint *active_threads, uint *cpu_cores) {
@@ -191,14 +158,20 @@ void askForThreadsCount(string s, bool *use_threads, uint *active_threads, uint 
         } else {
             try{ 
                 val = stoul(s, nullptr, 0);
-                if (val <= 0 || val > (*cpu_cores)) {
+                if (val < 0 || val > (*cpu_cores)) {
                     val = (*cpu_cores);
+                    return;
+                }
+                if (val > 1) {
                     (*use_threads) = true;
                     (*active_threads) = val;
-                    return;
+                } else {
+                    (*use_threads) = false;
+                    (*active_threads) = 1;
                 }
                 return;
             } catch (invalid_argument& ia) {
+                cout << "askForThreadsCount catched exception\n";
                 val = (*cpu_cores);
                 (*use_threads) = true;
                 (*active_threads) = val;
@@ -339,18 +312,19 @@ int main(int argc, char *argv[]) {
     errMsg += ss.str();
     
     vector<string> args;  // for storing C-argv like a pro in convenient stl::vector
-    vector<pair<string, string>> userParams; // parameters split by = and stored as .first and .second
+    map<string, string> userParams; // parameters split by = and stored as key->value
     
-    //all arguments to lower
+    // all arguments to lower
     for (int i=1;  i<argc;  ++i) {
         string arg = string(argv[i]);
         transform(arg.begin(), arg.end(), arg.begin(),
             [](unsigned char c){ return tolower(c); }
         );
         args.push_back(arg);
+        //cout << "LASTARG: " << args[args.size()-1] << "\n";
     }
     
-    //all arguments split by = 
+    // all arguments split by = 
     for (auto s: args) {
         if (s.find("=") != string::npos) {
             auto start = 0U;
@@ -362,28 +336,29 @@ int main(int argc, char *argv[]) {
                 end = s.find("=", start);
             }
             paramValue = s.substr(start, end);
-            userParams.push_back(make_pair(paramName, paramValue));
+            userParams[paramName] = paramValue;
+            //cout << "KV  " << paramName << " " << paramValue << "\n";
         }
     }
     
     vector<string> userKeys; // keys already passed to cmdline
 
-    for (auto nextPair: userParams) {
-        if (one_of(nextPair.first, {"n", "max", "limit"})) {
-            askForSieveLimit(nextPair.second, &n);
+    for (const auto& [key, value] : userParams) {
+        if (one_of(key, {"n", "max", "limit"})) {
+            askForSieveLimit(value, &n);
             userKeys.push_back("n");
         }
         
-        if (one_of(nextPair.first, {"threads", "threads_count", "t"})) {
-            askForThreadsCount(nextPair.second, &use_threads, &active_threads, &cpu_cores);
+        if (one_of(key, {"threads", "threads_count", "t"})) {
+            askForThreadsCount(value, &use_threads, &active_threads, &cpu_cores);
             userKeys.push_back("threads");
         }
         
-        if (one_of(nextPair.first, {"f", "file", "output", "filename"})) {
-            askForFileName(nextPair.second, &save_to_file, &fileName);
+        if (one_of(key, {"f", "file", "output", "filename"})) {
+            askForFileName(value, &save_to_file, &fileName);
             userKeys.push_back("filename");
         }
-        //cout << "cmdline: " << nextPair.first << " = " << nextPair.second << "\n";
+        //cout << "cmdline: " << key << "->" << value << "\n";
     }
     
     /* check what settings were not set yet and launch Gandalf wizard in the case of emergency */
@@ -397,6 +372,8 @@ int main(int argc, char *argv[]) {
         askForFileName("", &save_to_file, &fileName);
         cout << "stf" << save_to_file << "\tname\t" << fileName << "\n\n";
     }
+    
+    cout << "Threads: " << active_threads << " n=" << n << "\n\n";
     
     clock_t start = clock(); // HERE WE GO !!!!!!11
     bool *s = new bool[max({n, 6u})];
@@ -422,7 +399,9 @@ int main(int argc, char *argv[]) {
         p = np; // estimated in generator function. To p assign current next_prime result; is it last iter
     }
     while ((p * e <= n && p * e > 0)); // condition of abandon stage1. One day
+    
     cout << "STAGE 2/3\n";
+    
     generator(p, e, n, s); // This generator iteration is the longest. Gamma Goblins works for acceleration
     
     cout << "STAGE 3/3\n";
@@ -454,6 +433,7 @@ int main(int argc, char *argv[]) {
         */
         
         vector<vector<int>> primes; // We would love to use threads, each of them will work separate ...
+        // upper storage will be problematic for really huge numbers - memory...
         
         for (uint i=0;  i<active_threads;  ++i) { // fill each sub-vector with primes, we want to get even
             primes.push_back(vector<int>()); // or give me odds that try to cheat us "we are primes", lol
