@@ -453,7 +453,7 @@ int main(int argc, char *argv[]) {
          * for preparing structures of data and stuff them fully (charge up to the cap!) with correct data.         
         */
         
-        vector<vector<int>> primes; // We would love to use threades, each of them will work separate ...
+        vector<vector<int>> primes; // We would love to use threads, each of them will work separate ...
         
         for (uint i=0;  i<active_threads;  ++i) { // fill each sub-vector with primes, we want to get even
             primes.push_back(vector<int>()); // or give me odds that try to cheat us "we are primes", lol
