@@ -45,7 +45,7 @@ using std::chrono::system_clock;
 typedef unsigned int uint;
 
 
-bool one_of(string s, initializer_list<string> il) {
+bool one_of(const string s, const initializer_list<string> il) {
     /**
      * Tells if value s exists in collection passed in bracket in such way: {"val1", "val2", "val3"}
      * @param s: tested value
@@ -60,7 +60,7 @@ bool one_of(string s, initializer_list<string> il) {
 }
 
 
-bool one_of(string s, vector<string> vec) {
+bool one_of(const string s, const vector<string> vec) {
     /**
      * Tells if value s exists in vector<string> passed in vector<string>
      * @param s: tested value
@@ -75,7 +75,7 @@ bool one_of(string s, vector<string> vec) {
 }
 
 
-void askForSieveLimit(string s, uint *n, uint default_=25) {
+void askForSieveLimit(const string s, uint *n, const uint default_=25) {
     /**
      * Depending whether passed string s is empty, it asks user to write a number that is limit of sieve
      * @param s when not empty function tries to convert it to uint. In case of exception it converts it
@@ -182,7 +182,7 @@ void askForThreadsCount(string s, bool *use_threads, uint *active_threads, uint 
 }
 
 
-void askForFileName(string s, bool *save_to_file, string *fileName) {
+void askForFileName(const string s, bool *save_to_file, string *fileName) {
     /**
      * Depending on emptiness of @param s it can disable possibility of storing generated primes on disk
      * 
@@ -206,7 +206,7 @@ void askForFileName(string s, bool *save_to_file, string *fileName) {
 }
 
 
-uint nextPrime(uint p, bool s[]) {
+uint nextPrime(const uint p, const bool s[]) {
     /**
      * Detects first prime number on the right side on number line
      * 
@@ -214,7 +214,7 @@ uint nextPrime(uint p, bool s[]) {
      * @param s[] - array of bools, true symbols primes, false composites 
      * @return numeric position
      */
-    uint i = p;
+    uint i(p);
     do {
         i++;
     }
@@ -223,7 +223,7 @@ uint nextPrime(uint p, bool s[]) {
 }
 
 
-void generator(uint p, uint e, uint n, bool s[]) {
+void generator(const uint p, const uint e, const uint n, bool s[]) {
     /**
      * Calculates copy-value-distance, the range params of loop, in the loop  copies values from cells away of distance.
      * Copying values from distance cells generates possible prime candidates for further cleaning. Copying false values
@@ -251,7 +251,7 @@ void generator(uint p, uint e, uint n, bool s[]) {
 }
 
 
-void cleaning(uint p, uint e, bool s[]) {
+void cleaning(const uint p, const uint e, bool s[]) {
     /**
      * Select new composites based on prime, use precalculated limit. Other primes also generate composites so therefore
      * we do not have to work on whole range (which may  be large), for each prime, while each iteration. MMSieve cycles 
@@ -324,6 +324,7 @@ int main(int argc, char *argv[]) {
         args.push_back(arg);
     }
     
+    // display help?
     if (argc == 2 && one_of(args[0], {"h", "-h", "--h", "help", "-help", "--help"})) {
         cout << "Usage example: mmsieve n=[number] threads=[number] file=[someFileName.txt|no|0]\n\n"
              << " * n - sieve limit, to this number sieve finds primes\n"
@@ -331,7 +332,7 @@ int main(int argc, char *argv[]) {
              << " * file or shorter f, a filename of result file. passing f=no will not save result to file\n\n";
     }
     
-    // all arguments split by = 
+    // all arguments split by =, put them to map<key, value> 
     for (auto s: args) {
         if (s.find("=") != string::npos) {
             auto start = 0U;
@@ -347,7 +348,7 @@ int main(int argc, char *argv[]) {
         }
     }
     
-    vector<string> userKeys; // keys already passed to cmdline
+    vector<string> userKeys; // keys already passed to cmdline, we check what user did not pass
 
     for (const auto& [key, value] : userParams) {
         if (one_of(key, {"n", "max", "limit"})) {
@@ -381,7 +382,7 @@ int main(int argc, char *argv[]) {
     cout << "Threads: " << active_threads << " n=" << n << "\n\n";
     
     clock_t start = clock(); // HERE WE GO !!!!!!11
-    bool *s = new bool[max({n, 6u})];
+    bool *s = new bool[max({n, 6u})]; // weird constraint ;[
     s[2] = s[3] = s[5] = true; // predefined primes and remember we had set uint e=2, p=2, n=10000 or more
     
                                                                    /*
@@ -511,7 +512,7 @@ int main(int argc, char *argv[]) {
         
         cout << "ACTIVE THREADS:" << active_threads << "\n\n";
         
-        for (uint i=0;  i<threads_to_use;  ++i) { // we launch a threads
+        for (uint i=0;  i<threads_to_use;  ++i) { // we launch the threads
             auto t = thread(ThreadedTask(&primes[i], n, i, s, &active_threads));
 
             if (t.joinable()) {
@@ -520,9 +521,6 @@ int main(int argc, char *argv[]) {
         }
         
         while (1) { // here we can wait till all threads finish their cleaning jobs
-            //cout << "at=" << active_threads << "\t";
-            //cout << "\twaiting....\n";
-            //sleep_until(system_clock::now() + seconds(0.25));
             sleep_until(system_clock::now() + 0.01s);
             if (active_threads == 0) {
                 break;
